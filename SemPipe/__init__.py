@@ -1,8 +1,11 @@
 import os
 import os.path
+import shutil
 import urllib.parse
 import urllib.request
 import subprocess
+
+from lxml import etree
 
 import rdflib
 from rdflib.graph import Graph, ConjunctiveGraph, ReadOnlyGraphAggregate
@@ -13,6 +16,8 @@ from rdflib.term import Literal
 from rdflib.term import URIRef
 from rdflib import RDF as rdf
 #from tempfile import mkdtemp
+
+import Fresnel
 
 # We should not use SQLite, since
 # https://groups.google.com/forum/?fromgroups=#!topic/rdflib-dev/Cv0cekvDBnY
@@ -122,8 +127,20 @@ class Project(URIRef):
         directory = fileurl2path(directory)
         print("  Making shure directory {0} exists".format(directory))
         os.makedirs(directory, mode=0o777, exist_ok=True)
-        ret = subprocess.call(["cp", fileurl2path(source), fileurl2path(dest)])
-        print("  done with return value {0}".format(ret))
+        shutil.copy(fileurl2path(source), fileurl2path(dest))
+        print("  done")
+
+    def write(self, dest, data):
+        """Publishes a file with contents data"""
+        dest = self.buildLocation(dest)
+        print("writing data to {0}".format(dest))
+        directory = dest.rsplit("/",1)[0]
+        directory = fileurl2path(directory)
+        print("  Making shure directory {0} exists".format(directory))
+        os.makedirs(directory, mode=0o777, exist_ok=True)
+        with open(fileurl2path(dest), mode="wb") as f:
+            f.write(data)
+        print("  done")
 
     def buildResource(self, resource):
         """Looks up the description of the resource and builds it
@@ -153,16 +170,26 @@ class Project(URIRef):
         source = next(self.confGraph.objects(resource, semp.source))
         representations = self.confGraph.objects(resource, semp.representation)
         for r in representations:
-            content_type = self.confGraph.objects(r, semp["content-type"]).__next__()
+            content_type = next(self.confGraph.objects(r, semp["content-type"]))
             try:
-                language = self.confGraph.objects(r, semp.language).__next__()
+                language = next(self.confGraph.objects(r, semp.language))
             except(StopIteration):
                 language = None
             contentLocation = URIRef(resource + self.defaultEnding(content_type, language))
             if semp.Raw in self.confGraph.objects(r, semp.buildCommand):
                 self.copy(source, contentLocation)
             elif semp.Render in self.confGraph.objects(r, semp.buildCommand):
-                self.copy(source, contentLocation)
+                fresnelGraph = Graph()
+                fresnelGraph.parse(next(self.confGraph.objects(r, semp.fresnelGraph)), format="n3")
+                instanceGraph = Graph()
+                instanceGraph.parse(source)
+                ctx = Fresnel.Context(fresnelGraph=fresnelGraph, instanceGraph=instanceGraph)
+                box = Fresnel.ContainerBox(ctx)
+                box.append(next(self.confGraph.objects(resource, semp.subject)))
+                box.select()
+                box.format()
+                tree = box.transform()
+                self.write(contentLocation, etree.tostring(tree, pretty_print=True))
             else:
                 raise SemPipeException("Failed to produce representation {0} of {1}".format(r, resource))
 
