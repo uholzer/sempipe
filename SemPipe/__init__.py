@@ -4,6 +4,7 @@ import shutil
 import urllib.parse
 import urllib.request
 import subprocess
+import re
 
 from lxml import etree
 
@@ -12,8 +13,7 @@ from rdflib.graph import Graph, ConjunctiveGraph, ReadOnlyGraphAggregate
 from rdflib import plugin
 from rdflib.store import Store, NO_STORE, VALID_STORE
 from rdflib.namespace import Namespace
-from rdflib.term import Literal
-from rdflib.term import URIRef
+from rdflib.term import Literal, URIRef, BNode
 from rdflib import RDF as rdf
 #from tempfile import mkdtemp
 
@@ -47,6 +47,20 @@ def path2fileurl(path, directory=False):
         url += "/"
     return url
 
+def parse(graph, url):
+    if isinstance(url, BNode):
+        raise SemPipeException("Can not use BNode as URL")
+    if re.match("^file:.*\.n3$", url):
+        return graph.parse(url, format="n3")
+    elif re.match("^file:.*\.rdf$", url):
+        return graph.parse(url, format="xml")
+    else:
+        # Hope for automatic format guessing when using other protocols
+        return graph.parse(source=url)
+
+def multiparse(graph, urls):
+    for url in urls: parse(graph, url)
+
 conffilename = "sempipeconf.n3"
 
 class Project(URIRef):
@@ -56,22 +70,25 @@ class Project(URIRef):
             raise SemPipeException("A Module must be a directory and its URI must end with a /")
         super().__init__(uri)
 
-        self.storePath = storePath
-        # Get the Sleepycat plugin.
-        self.store = plugin.get('Sleepycat', Store)('rdfstore')
-
         self.default_graph_uri = "http://andonyar.com/foo"
 
-        # Open previously created store, or create it if it doesn't exist yet
-        self.g = ConjunctiveGraph(store="Sleepycat",
-                       identifier = URIRef(self.default_graph_uri))
-        #path = mkdtemp()
-        rt = self.g.open(self.storePath, create=False)
-        if rt == NO_STORE:
-            # There is no underlying Sleepycat infrastructure, create it
-            self.g.open(self.storePath, create=True)
+        if False:
+            self.storePath = storePath
+            # Get the Sleepycat plugin.
+            self.store = plugin.get('Sleepycat', Store)('rdfstore')
+
+            # Open previously created store, or create it if it doesn't exist yet
+            self.g = ConjunctiveGraph(store="Sleepycat",
+                           identifier = URIRef(self.default_graph_uri))
+            #path = mkdtemp()
+            rt = self.g.open(self.storePath, create=False)
+            if rt == NO_STORE:
+                # There is no underlying Sleepycat infrastructure, create it
+                self.g.open(self.storePath, create=True)
+            else:
+                assert rt == VALID_STORE, "The underlying store is corrupt"
         else:
-            assert rt == VALID_STORE, "The underlying store is corrupt"
+            self.g = ConjunctiveGraph(identifier = URIRef(self.default_graph_uri))
 
         #Aggregate graphs
         self.confGraphsList = [] # We have our own list, because ReadOnlyGraphAggregate.contexts has empty return value
@@ -180,9 +197,10 @@ class Project(URIRef):
                 self.copy(source, contentLocation)
             elif semp.Render in self.confGraph.objects(r, semp.buildCommand):
                 fresnelGraph = Graph()
-                fresnelGraph.parse(next(self.confGraph.objects(r, semp.fresnelGraph)), format="n3")
+                multiparse(fresnelGraph, self.confGraph.objects(r, semp.fresnelGraph))
                 instanceGraph = Graph()
-                instanceGraph.parse(source)
+                parse(instanceGraph, source)
+                multiparse(instanceGraph, self.confGraph.objects(r, semp.additionalData))
                 ctx = Fresnel.Context(fresnelGraph=fresnelGraph, instanceGraph=instanceGraph)
                 box = Fresnel.ContainerBox(ctx)
                 box.append(next(self.confGraph.objects(resource, semp.subject)))
