@@ -24,6 +24,8 @@ box = Fresnel.ContainerBox(context)
 box.append(donna)
 print("calling select:")
 box.select()
+print("calling format:")
+box.portray()
 print("result:")
 print(box)
 
