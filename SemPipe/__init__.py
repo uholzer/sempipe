@@ -205,7 +205,7 @@ class Project(URIRef):
                 box = Fresnel.ContainerBox(ctx)
                 box.append(next(self.confGraph.objects(resource, semp.subject)))
                 box.select()
-                box.format()
+                box.portray()
                 tree = box.transform()
                 self.write(contentLocation, etree.tostring(tree, pretty_print=True))
             else:
