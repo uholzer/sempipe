@@ -14,7 +14,9 @@
                        fresnel:group :foafGroup ;
                        fresnel:showProperties ( foaf:name 
                                                 foaf:surname 
-                                                foaf:depiction ) .
+                                                foaf:depiction 
+                                                foaf:mbox 
+                                              ) .
 
 :knowsLens rdf:type fresnel:Lens ;
            fresnel:classLensDomain foaf:Person ;
@@ -33,6 +35,11 @@
 
 :foafGroup rdf:type fresnel:Group ;
            fresnel:stylesheetLink <http://www.example.org/example.css> . 
+
+:personFormat rdf:type fresnel:Format;
+              fresnel:classFormatDomain foaf:Person ;
+              fresnel:valueStyle "personStyle"^^fresnel:styleClass ; 
+              fresnel:group :foafGroup .
 
 :depictFormat rdf:type fresnel:Format ;
               fresnel:propertyFormatDomain foaf:depiction ;
