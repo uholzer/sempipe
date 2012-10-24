@@ -207,6 +207,13 @@ class Project(URIRef):
                 box.select()
                 box.portray()
                 tree = box.transform()
+                try:
+                    xslt_file = next(self.confGraph.objects(r, semp.transformation))
+                    xslt_tree = etree.parse(fileurl2path(str(xslt_file)))
+                    transformation = etree.XSLT(xslt_tree)
+                    tree = transformation(tree)
+                except (StopIteration):
+                    pass
                 self.write(contentLocation, etree.tostring(tree, pretty_print=True))
             else:
                 raise SemPipeException("Failed to produce representation {0} of {1}".format(r, resource))
