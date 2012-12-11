@@ -96,6 +96,8 @@ class Project(URIRef):
         #Following does not work, constructor does not accept an empty list
         #self.confGraph = ReadOnlyGraphAggregate(self.confGraphsList)
         self._loadconf()
+        for graph in self.confGraph.objects(self, semp.dataGraph):
+            self.loadData(graph)
 
     def _loadconf(self, uri=None):
         """Loads a graph and all config-graphs it references as configuration graphs
@@ -124,6 +126,10 @@ class Project(URIRef):
         for row in qres.result:
             if row[0] not in alreadyLoaded:
                 self.loadconf(row[0])
+
+    def loadData(self, url):
+        """Loads a data graph"""
+        parse(self.g, url)
 
     @property
     def buildDir(self):
@@ -196,14 +202,16 @@ class Project(URIRef):
             if semp.Raw in self.confGraph.objects(r, semp.buildCommand):
                 self.copy(source, contentLocation)
             elif semp.Render in self.confGraph.objects(r, semp.buildCommand):
-                fresnelGraph = Graph()
-                multiparse(fresnelGraph, self.confGraph.objects(r, semp.fresnelGraph))
-                instanceGraph = Graph()
-                parse(instanceGraph, source)
-                multiparse(instanceGraph, self.confGraph.objects(r, semp.additionalData))
+                #fresnelGraph = Graph()
+                #multiparse(fresnelGraph, self.confGraph.objects(r, semp.fresnelGraph))
+                #instanceGraph = Graph()
+                #parse(instanceGraph, source)
+                #multiparse(instanceGraph, self.confGraph.objects(r, semp.additionalData))
+                fresnelGraph = self.g
+                instanceGraph = self.g
                 ctx = Fresnel.Context(fresnelGraph=fresnelGraph, instanceGraph=instanceGraph)
                 box = Fresnel.ContainerBox(ctx)
-                box.append(next(self.confGraph.objects(resource, semp.subject)))
+                box.append(resource)
                 box.select()
                 box.portray()
                 tree = box.transform()
