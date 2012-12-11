@@ -222,7 +222,8 @@ class Project(URIRef):
                     tree = transformation(tree)
                 except (StopIteration):
                     pass
-                self.write(contentLocation, etree.tostring(tree, pretty_print=True))
+                Fresnel.prettify(tree)
+                self.write(contentLocation, etree.tostring(tree,encoding="UTF-8",xml_declaration=True))
             else:
                 raise SemPipeException("Failed to produce representation {0} of {1}".format(r, resource))
 
