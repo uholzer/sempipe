@@ -131,6 +131,12 @@ class Project(URIRef):
         """Loads a data graph"""
         parse(self.g, url)
 
+    def contentLocation(self, base, ending):
+        if str(base)[-1] == '/':
+            return str(base) + 'index' + ending
+        else:
+            return str(base) + ending
+
     @property
     def buildDir(self):
         return next(self.confGraph.objects(self, semp.buildDir))
@@ -198,7 +204,7 @@ class Project(URIRef):
                 language = next(self.confGraph.objects(r, semp.language))
             except(StopIteration):
                 language = None
-            contentLocation = URIRef(resource + self.defaultEnding(content_type, language))
+            contentLocation = URIRef(self.contentLocation(resource, self.defaultEnding(content_type, language)))
             if semp.Raw in self.confGraph.objects(r, semp.buildCommand):
                 self.copy(source, contentLocation)
             elif semp.Render in self.confGraph.objects(r, semp.buildCommand):
