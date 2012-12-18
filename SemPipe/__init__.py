@@ -11,6 +11,7 @@ from lxml import etree
 import rdflib
 from rdflib.graph import Graph, ConjunctiveGraph, ReadOnlyGraphAggregate
 from rdflib import plugin
+from rdflib.collection import Collection
 from rdflib.store import Store, NO_STORE, VALID_STORE
 from rdflib.namespace import Namespace
 from rdflib.term import Literal, URIRef, BNode
@@ -236,6 +237,49 @@ class Project(URIRef):
     def defaultEnding(self, content_type=None, language=None):
         cts = { "application/rdf+xml": ".rdf", "text/html": ".html", None: "" }
         return cts[content_type] + ("." + language if language else "")
+
+    def publish(self):
+        import getpass
+        import subprocess
+
+        """Walks through HostedSpaces and upload the respective files
+        from the build diretory.
+
+        (Instead we should walk through the build directory. Will be
+        changed later.)"""
+
+        hostedSpacesQuery = """
+        SELECT ?space ?method ?command ?invocation
+        WHERE {
+            ?space a semp:HostedSpace .
+            ?space semp:publishMethod ?method .
+            ?method semp:command ?command .
+            ?method semp:invocation ?invocation .
+        }"""
+        askForQuery = """
+        SELECT ?variable
+        WHERE {
+            { ?method semp:askFor ?variable . }
+            UNION
+            { ?method semp:askForHidden ?variable . }
+        }""" 
+        #?hidden
+        #{ ?method semp:askFor ?variable . }
+        #UNION
+        #{ ?method semp:askForHidden ?variable .
+        #  BIND ("true"^^xsd:boolean as ?hidden) }
+        for spaceRow in self.confGraph.query(hostedSpacesQuery, initNs={"semp": semp}):
+            space = spaceRow[0]
+            method = spaceRow[1]
+            answers = dict()
+            for question in self.confGraph.query(askForQuery, initNs={"semp": semp}, initBindings={"method": method}):
+                answers[question[0]] = getpass.getpass("{} for method {}".format(question[0], spaceRow[1]))
+            spacedir = self.buildLocation(space)
+            command = []
+            for arg in Collection(self.confGraph, spaceRow[2]):
+                command.append(str(arg).format("",fileurl2path(spacedir),str(space),**answers))
+            print("Running {}".format(command[0]))
+            subprocess.call(command)
 
     @property
     def resources(self):
