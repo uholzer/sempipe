@@ -199,7 +199,10 @@ class Project(URIRef):
             used on a source file or representation to indicate the content type
         """
 
-        source = next(self.confGraph.objects(resource, semp.source))
+        try:
+            source = next(self.confGraph.objects(resource, semp.source))
+        except(StopIteration):
+            source = None
         representations = self.confGraph.objects(resource, semp.representation)
         for r in representations:
             content_type = next(self.confGraph.objects(r, semp["content-type"]))
@@ -233,6 +236,9 @@ class Project(URIRef):
                     pass
                 Fresnel.prettify(tree)
                 self.write(contentLocation, etree.tostring(tree,encoding="UTF-8",xml_declaration=True))
+            elif semp.Serialize in self.confGraph.objects(r, semp.buildCommand):
+                graph = self.g.get_context(resource)
+                self.write(contentLocation, graph.serialize())
             else:
                 raise SemPipeException("Failed to produce representation {0} of {1}".format(r, resource))
 
