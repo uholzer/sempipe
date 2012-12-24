@@ -23,12 +23,12 @@ import Fresnel
 # We should not use SQLite, since
 # https://groups.google.com/forum/?fromgroups=#!topic/rdflib-dev/Cv0cekvDBnY
 
-plugin.register(
-    'sparql', rdflib.query.Processor,
-    'rdfextras.sparql.processor', 'Processor')
-plugin.register(
-    'sparql', rdflib.query.Result,
-    'rdfextras.sparql.query', 'SPARQLQueryResult')
+#plugin.register(
+#    'sparql', rdflib.query.Processor,
+#    'librdf_sparql.processor', 'Processor')
+#plugin.register(
+#    'sparql', rdflib.query.Result,
+#    'librdf_sparql.results', 'SPARQLQueryResult')
 
 semp = Namespace("http://www.andonyar.com/rec/2012/sempipe/voc#")
 
