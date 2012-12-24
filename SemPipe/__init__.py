@@ -16,6 +16,7 @@ from rdflib.store import Store, NO_STORE, VALID_STORE
 from rdflib.namespace import Namespace
 from rdflib.term import Literal, URIRef, BNode, Variable
 from rdflib import RDF as rdf
+import rdflib_sparql
 #from tempfile import mkdtemp
 
 import Fresnel
@@ -100,6 +101,10 @@ class Project(URIRef):
         self._loadconf()
         for graph in self.confGraph.objects(self, semp.dataGraph):
             self.loadData(graph)
+        for updateList in self.confGraph.objects(self, semp.update):
+            for updateInstruction in Collection(self.confGraph, updateList):
+                print("Update")
+                self.updateGraph(str(updateInstruction))
 
     def _loadconf(self, uri=None):
         """Loads a graph and all config-graphs it references as configuration graphs
@@ -133,6 +138,9 @@ class Project(URIRef):
     def loadData(self, url):
         """Loads a data graph"""
         parse(self.g, url)
+
+    def updateGraph(self, sparql):
+        rdflib_sparql.processor.processUpdate(self.g, sparql)
 
     def contentLocation(self, base, ending):
         if str(base)[-1] == '/':
