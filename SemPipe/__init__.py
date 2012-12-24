@@ -14,7 +14,7 @@ from rdflib import plugin
 from rdflib.collection import Collection
 from rdflib.store import Store, NO_STORE, VALID_STORE
 from rdflib.namespace import Namespace
-from rdflib.term import Literal, URIRef, BNode
+from rdflib.term import Literal, URIRef, BNode, Variable
 from rdflib import RDF as rdf
 #from tempfile import mkdtemp
 
@@ -270,15 +270,15 @@ class Project(URIRef):
         #UNION
         #{ ?method semp:askForHidden ?variable .
         #  BIND ("true"^^xsd:boolean as ?hidden) }
-        for spaceRow in self.confGraph.query(hostedSpacesQuery, initNs={"semp": semp}):
-            space = spaceRow[0]
-            method = spaceRow[1]
+        for spaceRow in self.confGraph.query(hostedSpacesQuery, initNs={"semp": semp}).bindings:
+            space = spaceRow[Variable("?space")]
+            method = spaceRow[Variable("?method")]
             answers = dict()
-            for question in self.confGraph.query(askForQuery, initNs={"semp": semp}, initBindings={"method": method}):
-                answers[question[0]] = getpass.getpass("{} for method {}".format(question[0], spaceRow[1]))
+            for question in self.confGraph.query(askForQuery, initNs={"semp": semp}, initBindings={"method": method}).bindings:
+                answers[question[Variable("?variable")]] = getpass.getpass("{} for method {}".format(question[Variable("?variable")], method))
             spacedir = self.buildLocation(space)
             command = []
-            for arg in Collection(self.confGraph, spaceRow[2]):
+            for arg in Collection(self.confGraph, spaceRow[Variable("command")]):
                 command.append(str(arg).format("",fileurl2path(spacedir),str(space),**answers))
             print("Running {}".format(command[0]))
             subprocess.call(command)
