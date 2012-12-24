@@ -252,7 +252,7 @@ class Project(URIRef):
 
     def defaultEnding(self, content_type=None, language=None):
         cts = { "application/rdf+xml": ".rdf", "text/html": ".html", None: "" }
-        return cts[content_type] + ("." + language if language else "")
+        return ("." + language if language else "") + cts[content_type]
 
     def publish(self):
         import getpass
