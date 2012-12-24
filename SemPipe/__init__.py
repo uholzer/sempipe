@@ -90,6 +90,7 @@ class Project(URIRef):
                 assert rt == VALID_STORE, "The underlying store is corrupt"
         else:
             self.g = ConjunctiveGraph(identifier = URIRef(self.default_graph_uri))
+            self.g.default_context = self.g
 
         #Aggregate graphs
         self.confGraphsList = [] # We have our own list, because ReadOnlyGraphAggregate.contexts has empty return value
@@ -115,6 +116,7 @@ class Project(URIRef):
             self.commit()
         self.confGraphsList += [newgraph]
         self.confGraph = ReadOnlyGraphAggregate(self.confGraphsList)
+        self.confGraph.default_context = self.confGraph
         qres = self.confGraph.query(
             """SELECT DISTINCT ?cg
                WHERE {
