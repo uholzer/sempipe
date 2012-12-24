@@ -207,13 +207,13 @@ class Project(URIRef):
             used on a source file or representation to indicate the content type
         """
 
-        try:
-            source = next(self.confGraph.objects(resource, semp.source))
-        except(StopIteration):
-            source = None
         representations = self.confGraph.objects(resource, semp.representation)
         for r in representations:
             content_type = next(self.confGraph.objects(r, semp["content-type"]))
+            try:
+                source = next(self.confGraph.objects(r, semp.source))
+            except(StopIteration):
+                source = None
             try:
                 language = next(self.confGraph.objects(r, semp.language))
             except(StopIteration):
