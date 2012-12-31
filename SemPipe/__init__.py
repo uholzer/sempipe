@@ -252,7 +252,7 @@ class Project(URIRef):
                 raise SemPipeException("Failed to produce representation {0} of {1}".format(r, resource))
 
     def defaultEnding(self, content_type=None, language=None):
-        cts = { "application/rdf+xml": ".rdf", "text/html": ".html", None: "" }
+        cts = { "application/rdf+xml": ".rdf", "application/xhtml+xml": ".xhtml", "text/html": ".html", None: "" }
         return ("." + language if language else "") + cts[content_type]
 
     def publish(self):
