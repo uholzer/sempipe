@@ -236,10 +236,11 @@ class Project(URIRef):
                 box.portray()
                 tree = box.transform()
                 try:
-                    xslt_file = next(self.confGraph.objects(r, semp.transformation))
-                    xslt_tree = etree.parse(fileurl2path(str(xslt_file)))
-                    transformation = etree.XSLT(xslt_tree)
-                    tree = transformation(tree)
+                    xslt_files = Collection(self.confGraph, next(self.confGraph.objects(r, semp.transformation)))
+                    for xslt_file in xslt_files:
+                        xslt_tree = etree.parse(fileurl2path(str(xslt_file)))
+                        transformation = etree.XSLT(xslt_tree)
+                        tree = transformation(tree)
                 except (StopIteration):
                     pass
                 Fresnel.prettify(tree)
