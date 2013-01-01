@@ -9,6 +9,7 @@ resources = p.resources
 for r in resources:
     print("Building resource {0}".format(r))
     p.buildResource(r)
+p.write_htaccess()
 
 p.commit()
 p.close()

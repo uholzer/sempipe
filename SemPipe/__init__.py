@@ -208,9 +208,6 @@ class Project(URIRef):
         """
 
         representations = self.confGraph.objects(resource, semp.representation)
-        typemap_url = lambda url: str(url).rsplit("/", 2)[-1]
-        typemap = ["URI: {}\n\n".format(typemap_url(resource))]
-        typemap_needed = False
         for r in representations:
             content_type = next(self.confGraph.objects(r, semp["content-type"]))
             try:
@@ -258,7 +255,38 @@ class Project(URIRef):
             else:
                 raise SemPipeException("Failed to produce representation {0} of {1}".format(r, resource))
 
-            # Updating the typemap
+        #write typemap
+        typemap = self.typemap(resource)
+        if typemap is not None:
+            self.write(resource, typemap)
+            
+
+    def typemap(self, resource):
+        """
+        Returns the contents of a type-map file for all
+        representations of the given resource. Returns None if no
+        typemap is necessary.
+        """
+        representations = self.confGraph.objects(resource, semp.representation)
+        typemap_url = lambda url: str(url).rsplit("/", 1)[-1]
+        typemap = ["URI: {}\n\n".format(typemap_url(resource))]
+        typemap_needed = False
+        for r in representations:
+            content_type = next(self.confGraph.objects(r, semp["content-type"]))
+            try:
+                source = next(self.confGraph.objects(r, semp.source))
+            except(StopIteration):
+                source = None
+            try:
+                language = next(self.confGraph.objects(r, semp.language))
+            except(StopIteration):
+                language = None
+            try:
+                quality = next(self.confGraph.objects(r, semp.quality))
+            except(StopIteration):
+                quality = None
+            contentLocation = URIRef(self.contentLocation(resource, self.defaultEnding(content_type, language)))
+
             typemap.append("URI: {}\n".format(typemap_url(contentLocation)))
             typemap.append("Content-type: {}".format(content_type))
             if quality is not None:
@@ -271,19 +299,43 @@ class Project(URIRef):
             typemap.append("\n")
 
         if typemap_needed:
-            self.write(resource, "".join(typemap).encode("UTF-8"))
-            
-
-    def typeMap(self, resource):
-        """
-        Returns the contents of a type-map file for all
-        representations of the given resource
-        """
+            return "".join(typemap).encode("UTF-8")
+        else:
+            return None
 
 
     def defaultEnding(self, content_type=None, language=None):
         cts = { "application/rdf+xml": ".rdf", "application/xhtml+xml": ".xhtml", "text/html": ".html", None: "" }
         return ("." + language if language else "") + cts[content_type]
+
+    def write_htaccess(self):
+        """Writes all required .htaccess files."""
+
+        print("htaccess")
+
+        # First generate the directives for each resource
+        filesinfo = [];
+        resources = self.resources
+        for resource in resources:
+            info = [];
+            filesinfo.append((resource, info));
+            if self.typemap(resource) is not None:
+                info.append("SetHandler type-map\n")
+                print("htaccess1")
+
+        # Generate the .htaccess files
+        htaccessfiles = dict()
+        for resource, info in filter(lambda x: x[1], filesinfo):
+            print("htaccess2")
+            directory, filename = resource.rsplit("/", 1)
+            ht = htaccessfiles.setdefault(directory, [])
+            ht.append('<Files "{}">\n'.format(filename))
+            ht += info
+            ht.append('</Files>\n')
+
+        for directory, ht in htaccessfiles.items():
+            print("htaccess3")
+            self.write(directory + "/.htaccess", "".join(ht).encode("UTF-8"))
 
     def publish(self):
         import getpass
