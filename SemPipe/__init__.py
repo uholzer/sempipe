@@ -208,6 +208,9 @@ class Project(URIRef):
         """
 
         representations = self.confGraph.objects(resource, semp.representation)
+        typemap_url = lambda url: str(url).rsplit("/", 2)[-1]
+        typemap = ["URI: {}\n\n".format(typemap_url(resource))]
+        typemap_needed = False
         for r in representations:
             content_type = next(self.confGraph.objects(r, semp["content-type"]))
             try:
@@ -218,6 +221,10 @@ class Project(URIRef):
                 language = next(self.confGraph.objects(r, semp.language))
             except(StopIteration):
                 language = None
+            try:
+                quality = next(self.confGraph.objects(r, semp.quality))
+            except(StopIteration):
+                quality = None
             contentLocation = URIRef(self.contentLocation(resource, self.defaultEnding(content_type, language)))
             if semp.Raw in self.confGraph.objects(r, semp.buildCommand):
                 self.copy(source, contentLocation)
@@ -250,6 +257,29 @@ class Project(URIRef):
                 self.write(contentLocation, graph.serialize())
             else:
                 raise SemPipeException("Failed to produce representation {0} of {1}".format(r, resource))
+
+            # Updating the typemap
+            typemap.append("URI: {}\n".format(typemap_url(contentLocation)))
+            typemap.append("Content-type: {}".format(content_type))
+            if quality is not None:
+                typemap[-1] += "; q={}\n".format(quality)
+                typemap_needed = True
+            else:
+                typemap[-1] += "\n"
+            if language is not None:
+                typemap.append("Content-language: {}\n".format(language))
+            typemap.append("\n")
+
+        if typemap_needed:
+            self.write(resource, "".join(typemap).encode("UTF-8"))
+            
+
+    def typeMap(self, resource):
+        """
+        Returns the contents of a type-map file for all
+        representations of the given resource
+        """
+
 
     def defaultEnding(self, content_type=None, language=None):
         cts = { "application/rdf+xml": ".rdf", "application/xhtml+xml": ".xhtml", "text/html": ".html", None: "" }
