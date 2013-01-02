@@ -234,7 +234,7 @@ class Project(URIRef):
                 box.select()
                 box.portray()
                 tree = box.transform()
-                Fresnel.prettify(tree)
+                #Fresnel.prettify(tree) # results in bad whitespace
                 self.write(contentLocation, etree.tostring(tree,encoding="UTF-8",xml_declaration=True))
             elif semp.Serialize in self.confGraph.objects(r, semp.buildCommand):
                 graph = self.g.get_context(resource)
