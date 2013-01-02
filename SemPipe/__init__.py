@@ -234,14 +234,6 @@ class Project(URIRef):
                 box.select()
                 box.portray()
                 tree = box.transform()
-                try:
-                    xslt_files = Collection(self.confGraph, next(self.confGraph.objects(r, semp.transformation)))
-                    for xslt_file in xslt_files:
-                        xslt_tree = etree.parse(fileurl2path(str(xslt_file)))
-                        transformation = etree.XSLT(xslt_tree)
-                        tree = transformation(tree)
-                except (StopIteration):
-                    pass
                 Fresnel.prettify(tree)
                 self.write(contentLocation, etree.tostring(tree,encoding="UTF-8",xml_declaration=True))
             elif semp.Serialize in self.confGraph.objects(r, semp.buildCommand):
@@ -249,6 +241,19 @@ class Project(URIRef):
                 self.write(contentLocation, graph.serialize())
             else:
                 raise SemPipeException("Failed to produce representation {0} of {1}".format(r, resource))
+
+            try:
+                xslt_files = Collection(self.confGraph, next(self.confGraph.objects(r, semp.transformation)))
+                buildloc = self.buildLocation(contentLocation)
+                for xslt_file in xslt_files:
+                    command = ["xsltproc",
+                               "--output", fileurl2path(buildloc),
+                               fileurl2path(str(xslt_file)),
+                               fileurl2path(buildloc)]
+                    print("Running transformation", *command)
+                    subprocess.call(command)
+            except (StopIteration):
+                pass
 
         #write typemap
         typemap = self.typemap(resource)
