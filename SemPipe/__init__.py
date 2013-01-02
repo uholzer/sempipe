@@ -17,6 +17,7 @@ from rdflib.namespace import Namespace
 from rdflib.term import Literal, URIRef, BNode, Variable
 from rdflib import RDF as rdf
 import rdflib_sparql
+import rdflib_sparql.processor
 #from tempfile import mkdtemp
 
 import Fresnel
@@ -114,7 +115,7 @@ class Project(URIRef):
 
         if self.g.get_context(uri):
             print("ConfGraph {} found in database".format(uri))
-            newgraph = self.g.get_context(uri)
+            return
         else:
             print("Loading {} as config graph".format(uri))
             newgraph = self.g.parse(uri, format="n3")
@@ -122,18 +123,12 @@ class Project(URIRef):
         self.confGraphsList += [newgraph]
         self.confGraph = ReadOnlyGraphAggregate(self.confGraphsList)
         self.confGraph.default_context = self.confGraph
-        qres = self.confGraph.query(
-            """SELECT DISTINCT ?cg
-               WHERE {
-                  ?cg semp:subgraphOf semp:ConfigGraph .
-               }""",
-            initNs={ "semp": semp }
-        )
-        #Recursively load additional graphs if not already done so
-        alreadyLoaded = set([confGraph.identifier for confGraph in self.confGraphsList])
-        for row in qres.result:
-            if row[0] not in alreadyLoaded:
-                self.loadconf(row[0])
+        imports =  set(self.confGraph.objects(uri, semp.confGraph))
+        imports |= set(self.confGraph.objects(self, semp.confGraph))
+        imports -= set((confGraph.identifier for confGraph in self.confGraphsList))
+        #Recursively load additional graphs
+        for imp in imports:
+            self._loadconf(imp)
 
     def loadData(self, url):
         """Loads a data graph"""
