@@ -13,12 +13,11 @@ directly. -->
     xmlns:fres  = "http://www.andonyar.com/rec/2012/sempipe/fresnelxml"
     xmlns:xhtml = "http://www.w3.org/1999/xhtml"
     xmlns       = "http://www.w3.org/1999/xhtml"
-    exclude-result-prefixes="#all"
+    exclude-result-prefixes="xsl fn rdf foaf fres xhtml"
 >
 
 <xsl:output
      method="xml"
-     doctype-system="about:legacy-compat"
      encoding="UTF-8"
      indent="yes" />
 
@@ -28,7 +27,6 @@ directly. -->
     <html>
     <head>
         <title><xsl:value-of select="/fres:fresnelresult/fres:resource/fres:label"/></title>
-        <meta charset="utf-8"/>
         <style type="text/css"><![CDATA[
             @namespace html     "http://www.w3.org/1999/xhtml";
             .figure { float: right }

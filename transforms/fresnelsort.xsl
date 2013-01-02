@@ -6,10 +6,9 @@
     version = "1.0"
     xmlns:xsl   = "http://www.w3.org/1999/XSL/Transform"
     xmlns:fn    = "http://www.w3.org/2005/xpath-functions"
-    xmlns:rdf   = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns:fres  = "http://www.andonyar.com/rec/2012/sempipe/fresnelxml"
     xmlns       = "http://www.andonyar.com/rec/2012/sempipe/fresnelxml"
-    exclude-result-prefixes="#all"
+    exclude-result-prefixes="fn"
 >
 
 
