@@ -306,7 +306,17 @@ class Project(URIRef):
 
     def defaultEnding(self, content_type=None, language=None):
         cts = { "application/rdf+xml": ".rdf", "application/xhtml+xml": ".xhtml", "text/html": ".html", None: "" }
-        return ("." + language if language else "") + cts[content_type]
+        if content_type:
+            typeendings = list(self.confGraph.objects(URIRef("http://purl.org/NET/mediatypes/" + content_type), semp.defaultExtension))
+            if len(typeendings) > 1:
+                raise SemPipeException("ambiguous extension for content-type {} in confGraph.".format(content_type))
+            elif len(typeendings) < 1:
+                raise SemPipeException("No extension for content-type {} found".format(content_type))
+            else:
+                typeending = typeendings[0]
+        else:
+            typeending = ""
+        return ("." + language if language else "") + "." + typeending
 
     def write_htaccess(self):
         """Writes all required .htaccess files."""
