@@ -53,7 +53,19 @@ directly. -->
 </xsl:template>
 
 <xsl:template match="fres:resource" mode="img">
-    <img src="{./@uri}"/>
+    <img src="{@uri}">
+        <xsl:choose>
+        <xsl:when test="string(fres:label)">
+            <xsl:attribute name="alt"><xsl:value-of select="fres:label"/></xsl:attribute>
+        </xsl:when>
+        <xsl:otherwise>
+            <xsl:message>
+                Attribute alt in image <xsl:value-of select="@uri"/>
+                omitted because there is no label.
+            </xsl:message>
+        </xsl:otherwise>
+        </xsl:choose>
+    </img>
 </xsl:template>
 
 <xsl:template match="fres:resource">
