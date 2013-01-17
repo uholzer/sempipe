@@ -135,7 +135,10 @@ class Project(URIRef):
         parse(self.g, url)
 
     def updateGraph(self, sparql):
-        rdflib_sparql.processor.processUpdate(self.g, sparql)
+        try:
+            rdflib_sparql.processor.processUpdate(self.g, sparql)
+        except:
+            raise SemPipeException("Update instruction failed:\n{}".format(str(sparql)))
 
     def contentLocation(self, base, ending):
         if str(base)[-1] == '/':
