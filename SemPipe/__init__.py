@@ -5,6 +5,7 @@ import urllib.parse
 import urllib.request
 import subprocess
 import re
+import collections
 
 from lxml import etree
 
@@ -66,6 +67,8 @@ def multiparse(graph, urls):
 
 conffilename = "sempipeconf.n3"
 
+HostedSpace = collections.namedtuple('HostedSpace', ["baseURI","mapTo","index","htaccess"]);
+
 class Project(URIRef):
 
     def __init__(self, uri, storePath):
@@ -106,6 +109,19 @@ class Project(URIRef):
             for updateInstruction in Collection(self.confGraph, updateList):
                 print("Update")
                 self.updateGraph(str(updateInstruction))
+        # Cache HostedSpaces
+        self.hostedSpaces = []
+        res = self.confGraph.query("""
+            SELECT ?baseURI ?mapTo ?index ?htaccess {
+                ?baseURI a semp:HostedSpace ;
+                semp:mapTo ?mapTo ;
+                semp:mapIndexTo ?index ;
+                semp:mapHTAccessTo ?htaccess .
+            }
+        """, initNs={"semp": semp})
+        for s in res:
+            self.hostedSpaces.append(HostedSpace._make(s))
+            
 
     def _loadconf(self, uri=None):
         """Loads a graph and all config-graphs it references as configuration graphs
@@ -140,9 +156,19 @@ class Project(URIRef):
         except:
             raise SemPipeException("Update instruction failed:\n{}".format(str(sparql)))
 
+    def hostedSpace(self, resource):
+        """Picks the best matching hostedSpace for the given resource."""
+        hostedSpaces = filter(lambda s: resource.startswith(s.baseURI), self.hostedSpaces)
+        # Find the best match, which is the most specific one:
+        try:
+            return max(hostedSpaces, key=lambda s: len(s.baseURI))
+        except ValueError:
+            raise SemPipeException("No hosted space found for resource {}".format(resource))
+
     def contentLocation(self, base, ending):
         if str(base)[-1] == '/':
-            return str(base) + 'index' + ending
+            index = self.hostedSpace(base).index
+            return str(base) + index + ending
         else:
             return str(base) + ending
 
@@ -151,7 +177,10 @@ class Project(URIRef):
         return next(self.confGraph.objects(self, semp.buildDir))
 
     def buildLocation(self, resource):
-        return self.buildDir + "/" + resource
+        """Determines the filename in the build directory
+        corresponding to a URI."""
+        hs = self.hostedSpace(resource)
+        return self.buildDir + "/" + hs.mapTo + resource[len(hs.baseURI):]
 
     def copy(self, source, dest):
         """Publish a resource by copying a file
@@ -348,7 +377,8 @@ class Project(URIRef):
 
         for directory, ht in htaccessfiles.items():
             print("htaccess3")
-            self.write(directory + "/.htaccess", "".join(ht).encode("UTF-8"))
+            filename = self.hostedSpace(resource).htaccess
+            self.write(directory + "/" + filename, "".join(ht).encode("UTF-8"))
 
     def publish(self):
         import getpass
