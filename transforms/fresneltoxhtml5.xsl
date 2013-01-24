@@ -42,12 +42,12 @@ directly. -->
 
 <!-- fres:resource -->
 
-<xsl:template match="fres:resource[contains(fres:format/@style,'html:dl')]">
-    <xsl:apply-templates select="fres:property[contains(fres:format/@style,'out-of-order:before')]"/>
+<xsl:template match="fres:resource[contains(fres:format/@class,'html:dl')]">
+    <xsl:apply-templates select="fres:property[contains(fres:format/@class,'out-of-order:before')]"/>
     <dl>
-    <xsl:apply-templates select="fres:property[not(contains(fres:format/@style,'out-of-order'))]" mode="dl"/>
+    <xsl:apply-templates select="fres:property[not(contains(fres:format/@class,'out-of-order'))]" mode="dl"/>
     </dl>
-    <xsl:apply-templates select="fres:property[contains(fres:format/@style,'out-of-order:after')]"/>
+    <xsl:apply-templates select="fres:property[contains(fres:format/@class,'out-of-order:after')]"/>
 </xsl:template>
 
 <xsl:template match="fres:resource" mode="img">
@@ -78,8 +78,8 @@ directly. -->
 
 <!-- fres:property -->
 
-<xsl:template match="fres:property[contains(fres:format/@style,'figure')]">
-    <div class="{fres:format/@style}">
+<xsl:template match="fres:property[contains(fres:format/@class,'figure')]">
+    <div class="{fres:format/@class}">
     <xsl:apply-templates select="fres:label"/>
     <xsl:apply-templates select="fres:value"/>
     </div>
@@ -105,14 +105,14 @@ directly. -->
     <xsl:copy-of select="(fres:literal|fres:xmlliteral)/child::node()"/>
 </xsl:template>
 
-<xsl:template match="fres:value[contains(fres:format/@style,'html:section')]">
+<xsl:template match="fres:value[contains(fres:format/@class,'html:section')]">
     <section>
         <h1><xsl:apply-templates select="fres:resource/fres:label"/></h1>
         <xsl:apply-templates select="fres:resource"/>
     </section>
 </xsl:template>
 
-<xsl:template match="fres:value[contains(fres:format/@style,'html:img')]">
+<xsl:template match="fres:value[contains(fres:format/@class,'html:img')]">
     <xsl:apply-templates select="fres:resource" mode="img"/>
 </xsl:template>
 
