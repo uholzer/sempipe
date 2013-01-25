@@ -3,7 +3,6 @@
 import SemPipe
 from SemPipe import Project
 
-print("Building {}".format(SemPipe.path2fileurl(".", directory=True)))
 p = Project(SemPipe.path2fileurl(".", directory=True), "./sempipe_store")
 resources = p.resources
 for r in resources:

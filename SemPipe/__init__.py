@@ -1,3 +1,4 @@
+import sys
 import os
 import os.path
 import shutil
@@ -104,7 +105,6 @@ class Project(URIRef):
                 self.loadData(graph)
             for updateList in self.confGraph.objects(self, semp.update):
                 for updateInstruction in Collection(self.confGraph, updateList):
-                    print("Update")
                     self.updateGraph(str(updateInstruction))
             self.commit()
         # Cache HostedSpaces
@@ -128,10 +128,10 @@ class Project(URIRef):
         uri = uri or URIRef(self + conffilename)
 
         if self.g.get_context(uri):
-            print("ConfGraph {} already in database".format(uri))
+            print("ConfGraph {} already in database".format(uri), file=sys.stderr)
             return
 
-        print("Loading {} as config graph".format(uri))
+        print("Loading {} as config graph".format(uri), file=sys.stderr)
         newgraph = self.g.parse(uri, format="n3")
         self.confGraph += newgraph
         self.confGraph.add((uri, rdf.type, semp.ConfGraph))
@@ -185,25 +185,25 @@ class Project(URIRef):
         published, the corresponding directory in the build directory
         is derived automatically."""
         dest = self.buildLocation(dest)
-        print("copy {0} to {1}".format(source, dest))
+        print("copy {0} to {1}".format(source, dest), file=sys.stderr)
         directory = dest.rsplit("/",1)[0]
         directory = fileurl2path(directory)
-        print("  Making shure directory {0} exists".format(directory))
+        print("  Making shure directory {0} exists".format(directory), file=sys.stderr)
         os.makedirs(directory, mode=0o777, exist_ok=True)
         shutil.copy(fileurl2path(source), fileurl2path(dest))
-        print("  done")
+        print("  done", file=sys.stderr)
 
     def write(self, dest, data):
         """Publishes a file with contents data"""
         dest = self.buildLocation(dest)
-        print("writing data to {0}".format(dest))
+        print("writing data to {0}".format(dest), file=sys.stderr)
         directory = dest.rsplit("/",1)[0]
         directory = fileurl2path(directory)
-        print("  Making shure directory {0} exists".format(directory))
+        print("  Making shure directory {0} exists".format(directory), file=sys.stderr)
         os.makedirs(directory, mode=0o777, exist_ok=True)
         with open(fileurl2path(dest), mode="wb") as f:
             f.write(data)
-        print("  done")
+        print("  done", file=sys.stderr)
 
     def buildResource(self, resource):
         """Looks up the description of the resource and builds it
@@ -278,7 +278,7 @@ class Project(URIRef):
                                "--output", fileurl2path(buildloc),
                                fileurl2path(str(xslt_file)),
                                fileurl2path(buildloc)]
-                    print("Running transformation", *command)
+                    print("Running transformation", *command, file=sys.stderr)
                     subprocess.call(command)
             except (StopIteration):
                 pass
@@ -349,8 +349,6 @@ class Project(URIRef):
     def write_htaccess(self):
         """Writes all required .htaccess files."""
 
-        print("htaccess")
-
         # First generate the directives for each resource
         filesinfo = [];
         resources = self.resources
@@ -359,12 +357,10 @@ class Project(URIRef):
             filesinfo.append((resource, info));
             if self.typemap(resource) is not None:
                 info.append("SetHandler type-map\n")
-                print("htaccess1")
 
         # Generate the .htaccess files
         htaccessfiles = dict()
         for resource, info in filter(lambda x: x[1], filesinfo):
-            print("htaccess2")
             directory, filename = resource.rsplit("/", 1)
             ht = htaccessfiles.setdefault(directory, [])
             ht.append('<Files "{}">\n'.format(filename))
@@ -372,7 +368,7 @@ class Project(URIRef):
             ht.append('</Files>\n')
 
         for directory, ht in htaccessfiles.items():
-            print("htaccess3")
+            print("Writing a .htaccess in {}".format(directory), file=sys.stderr)
             filename = self.hostedSpace(resource).htaccess
             self.write(directory + "/" + filename, "".join(ht).encode("UTF-8"))
 
@@ -416,7 +412,7 @@ class Project(URIRef):
             command = []
             for arg in Collection(self.confGraph, spaceRow[Variable("command")]):
                 command.append(str(arg).format("",fileurl2path(spacedir),str(space),**answers))
-            print("Running {}".format(command[0]))
+            print("Running {}".format(command[0]), file=sys.stderr)
             subprocess.call(command)
 
     @property
