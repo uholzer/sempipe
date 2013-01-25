@@ -76,39 +76,37 @@ class Project(URIRef):
             raise SemPipeException("A Module must be a directory and its URI must end with a /")
         super().__init__(uri)
 
-        self.default_graph_uri = "http://andonyar.com/foo"
+        self.g = ConjunctiveGraph('IOMemory')
+        self.g.default_context = self.g
+        self.storePath = storePath
+        if storePath and os.path.exists(storePath+"/store.trix"):
+            self.g.parse(storePath + "/store.trix", format='trix')
+            self.confGraph = self.g.get_context("sempipe:confgraph")
+            #self.storePath = storePath
+            ## Get the Sleepycat plugin.
+            #self.store = plugin.get('Sleepycat', Store)('rdfstore')
 
-        if False:
-            self.storePath = storePath
-            # Get the Sleepycat plugin.
-            self.store = plugin.get('Sleepycat', Store)('rdfstore')
-
-            # Open previously created store, or create it if it doesn't exist yet
-            self.g = ConjunctiveGraph(store="Sleepycat",
-                           identifier = URIRef(self.default_graph_uri))
-            #path = mkdtemp()
-            rt = self.g.open(self.storePath, create=False)
-            if rt == NO_STORE:
-                # There is no underlying Sleepycat infrastructure, create it
-                self.g.open(self.storePath, create=True)
-            else:
-                assert rt == VALID_STORE, "The underlying store is corrupt"
+            ## Open previously created store, or create it if it doesn't exist yet
+            #self.g = ConjunctiveGraph(store="Sleepycat",
+            #               identifier = URIRef(self.default_graph_uri))
+            ##path = mkdtemp()
+            #rt = self.g.open(self.storePath, create=False)
+            #if rt == NO_STORE:
+            #    # There is no underlying Sleepycat infrastructure, create it
+            #    self.g.open(self.storePath, create=True)
+            #else:
+            #    assert rt == VALID_STORE, "The underlying store is corrupt"
         else:
-            self.g = ConjunctiveGraph(identifier = URIRef(self.default_graph_uri))
-            self.g.default_context = self.g
-
-        #Aggregate graphs
-        self.confGraphsList = [] # We have our own list, because ReadOnlyGraphAggregate.contexts has empty return value
-        self.confGraph = None
-        #Following does not work, constructor does not accept an empty list
-        #self.confGraph = ReadOnlyGraphAggregate(self.confGraphsList)
-        self._loadconf()
-        for graph in self.confGraph.objects(self, semp.dataGraph):
-            self.loadData(graph)
-        for updateList in self.confGraph.objects(self, semp.update):
-            for updateInstruction in Collection(self.confGraph, updateList):
-                print("Update")
-                self.updateGraph(str(updateInstruction))
+            #Aggregate graphs
+            self.confGraph = self.g.get_context(URIRef("sempipe:confgraph"))
+            self._loadconf()
+            for graph in self.confGraph.objects(self, semp.dataGraph):
+                self.loadData(graph)
+            for updateList in self.confGraph.objects(self, semp.update):
+                for updateInstruction in Collection(self.confGraph, updateList):
+                    print("Update")
+                    self.updateGraph(str(updateInstruction))
+            self.commit()
         # Cache HostedSpaces
         self.hostedSpaces = []
         res = self.confGraph.query("""
@@ -130,18 +128,16 @@ class Project(URIRef):
         uri = uri or URIRef(self + conffilename)
 
         if self.g.get_context(uri):
-            print("ConfGraph {} found in database".format(uri))
+            print("ConfGraph {} already in database".format(uri))
             return
-        else:
-            print("Loading {} as config graph".format(uri))
-            newgraph = self.g.parse(uri, format="n3")
-            self.commit()
-        self.confGraphsList += [newgraph]
-        self.confGraph = ReadOnlyGraphAggregate(self.confGraphsList)
-        self.confGraph.default_context = self.confGraph
-        imports =  set(self.confGraph.objects(uri, semp.confGraph))
-        imports |= set(self.confGraph.objects(self, semp.confGraph))
-        imports -= set((confGraph.identifier for confGraph in self.confGraphsList))
+
+        print("Loading {} as config graph".format(uri))
+        newgraph = self.g.parse(uri, format="n3")
+        self.confGraph += newgraph
+        self.confGraph.add((uri, rdf.type, semp.ConfGraph))
+        imports = set(newgraph.objects(uri, semp.confGraph))
+        imports |= set(newgraph.objects(self, semp.confGraph))
+        imports = filter(lambda x: not self.g.get_context(x), imports)
         #Recursively load additional graphs
         for imp in imports:
             self._loadconf(imp)
@@ -429,6 +425,8 @@ class Project(URIRef):
 
     def commit(self):
         self.g.commit()
+        if self.storePath:
+            self.g.serialize(destination=self.storePath+"/store.trix", format='trix', encoding='UTF-8')
 
     def serialize(self):
         return self.g.serialize()
