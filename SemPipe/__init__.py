@@ -82,7 +82,7 @@ class Project(URIRef):
         self.storePath = storePath
         if storePath and os.path.exists(storePath+"/store.trix"):
             self.g.parse(storePath + "/store.trix", format='trix')
-            self.confGraph = self.g.get_context("sempipe:confgraph")
+            self.confGraph = self.g.get_context(URIRef("sempipe:confgraph"))
             #self.storePath = storePath
             ## Get the Sleepycat plugin.
             #self.store = plugin.get('Sleepycat', Store)('rdfstore')
@@ -144,7 +144,7 @@ class Project(URIRef):
 
     def loadData(self, url):
         """Loads a data graph"""
-        parse(self.g, url)
+        return parse(self.g, url)
 
     def updateGraph(self, sparql):
         try:
@@ -152,14 +152,21 @@ class Project(URIRef):
         except:
             raise SemPipeException("Update instruction failed:\n{}".format(str(sparql)))
 
-    def hostedSpace(self, resource):
-        """Picks the best matching hostedSpace for the given resource."""
-        hostedSpaces = filter(lambda s: resource.startswith(s.baseURI), self.hostedSpaces)
+    def hostedSpace(self, resource, reverse=False):
+        """Picks the best matching hostedSpace for the given resource.
+
+        If reverse is set, resource is considered to be a path
+        relative to the buildDir and the corresponding URIRef is
+        returned."""
+        if reverse:
+            hostedSpaces = filter(lambda s: resource.startswith(self.buildDir + s.mapTo), self.hostedSpaces)
+        else:
+            hostedSpaces = filter(lambda s: resource.startswith(s.baseURI), self.hostedSpaces)
         # Find the best match, which is the most specific one:
         try:
             return max(hostedSpaces, key=lambda s: len(s.baseURI))
         except ValueError:
-            raise SemPipeException("No hosted space found for resource {}".format(resource))
+            raise SemPipeException("No hosted space found for {}".format(resource))
 
     def contentLocation(self, base, ending):
         if str(base)[-1] == '/':
@@ -176,7 +183,16 @@ class Project(URIRef):
         """Determines the filename in the build directory
         corresponding to a URI."""
         hs = self.hostedSpace(resource)
-        return self.buildDir + "/" + hs.mapTo + resource[len(hs.baseURI):]
+        return self.buildDir + hs.mapTo + resource[len(hs.baseURI):]
+
+    def buildLocationToResource(self, buildLocation):
+        """Determines the filename in the build directory
+        corresponding to a URI."""
+        if not buildLocation.startswith(self.buildDir):
+            raise SemPipeException("{} is not in buildDir".format(buildLocation))
+        
+        hs = self.hostedSpace(buildLocation, reverse=True)
+        return URIRef(hs.baseURI + buildLocation[len(self.buildDir + hs.mapTo):])
 
     def copy(self, source, dest):
         """Publish a resource by copying a file
