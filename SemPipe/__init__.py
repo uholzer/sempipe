@@ -103,10 +103,10 @@ class Project(URIRef):
             self._loadconf()
             for graph in self.confGraph.objects(self, semp.dataGraph):
                 self.loadData(graph)
-            for updateList in self.confGraph.objects(self, semp.update):
-                for updateInstruction in Collection(self.confGraph, updateList):
-                    self.updateGraph(str(updateInstruction))
-            self.commit()
+        for updateList in self.confGraph.objects(self, semp.update):
+            for updateInstruction in Collection(self.confGraph, updateList):
+                self.updateGraph(str(updateInstruction))
+        self.commit()
         # Cache HostedSpaces
         self.hostedSpaces = []
         res = self.confGraph.query("""
