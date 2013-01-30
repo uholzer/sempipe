@@ -233,6 +233,7 @@ while (my $line = <STDIN>) {
         my ($cmd, $object, $toplevel, $path, $filename) = ($2 || $4, $3, $5, $6, $7);
         chop $path; # Remove / at end
         $toplevel =~ s/\\x\{(\d+)\}/chr($1)/ge;
+        $path     =~ s/\\x\{(\d+)\}/chr($1)/ge;
         $filename =~ s/\\x\{(\d+)\}/chr($1)/ge;
         #in case of chmod, $object stores the mode
         if (!defined $current_server) {
