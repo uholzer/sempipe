@@ -208,7 +208,7 @@ sub rdel {
 
 my %actions = (
     put => sub { &put($_[0], $_[2]) },
-    del => sub { &put($_[2]) },
+    del => sub { &del($_[2]) },
     rput => \&rput,
     rdel => \&rdel,
     chmod => sub { &chmod($_[0], $_[2]) },
