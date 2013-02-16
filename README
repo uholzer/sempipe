@@ -1,0 +1,32 @@
+==============================
+  SemPipe: Semantic Pipeline
+==============================
+
+SemPipe is a collection of tools to create files ready for upload to a
+webserver generated from RDF data. I use it to build my website and
+I add, change or remove features whenever I feel like it. Therefore,
+it is at the moment not possible to give a clear description of what
+SemPipe does.
+
+SemPipe contains:
+- Fresnel rendering engine in order to select a subtree of an RDF
+  graph
+- Some XSLTs in order to convert the result of the Fresnel renderer to
+  XHTML 5 or XHTML 1
+- A Python programme that builds files for a webserver based on a
+  description in RDF (Invokes rendering with Fresnel and
+  transformations, writes typemaps and .htaccess files)
+- Perl scripts to update an FTP according to changes made in a GIT
+  repository
+
+There is no documentation available yet, but you are free to play with
+this stuff.
+
+Requirements:
+- Python 3
+- Perl
+- rdflib <https://github.com/RDFLib/rdflib>
+- rdflib-sparql <https://github.com/RDFLib/rdflib-sparql>
+
+-- Urs Holzer <urs@andonyar.com>
+
