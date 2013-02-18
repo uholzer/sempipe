@@ -67,7 +67,12 @@ directly. -->
 </xsl:template>
 
 <xsl:template match="fres:resource">
+    <!-- Should we place a label here too? -->
     <xsl:apply-templates select="fres:property"/>
+</xsl:template>
+
+<xsl:template match="fres:resource[not(fres:property)]">
+    <xsl:apply-templates select="fres:label"/>
 </xsl:template>
 
 <xsl:template match="fres:resource[not(fres:property) and not(string(fres:label))]">
