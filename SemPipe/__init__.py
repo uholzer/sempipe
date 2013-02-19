@@ -22,7 +22,7 @@ import rdflib_sparql
 import rdflib_sparql.processor
 #from tempfile import mkdtemp
 
-import Fresnel
+import RDFFresnel as Fresnel
 
 # We should not use SQLite, since
 # https://groups.google.com/forum/?fromgroups=#!topic/rdflib-dev/Cv0cekvDBnY
