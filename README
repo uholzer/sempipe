@@ -2,6 +2,10 @@
   SemPipe: Semantic Pipeline
 ==============================
 
+IMPORTANT: File formats and interfaces are not yet stable! Significant
+changes to configuration files, output formats and XSL transformations
+will be made!
+
 SemPipe is a collection of tools to create files ready for upload to a
 webserver generated from RDF data. I use it to build my website and
 I add, change or remove features whenever I feel like it. Therefore,
