@@ -70,12 +70,13 @@ conffilename = "sempipeconf.n3"
 
 HostedSpace = collections.namedtuple('HostedSpace', ["baseURI","mapTo","index","htaccess"]);
 
-class Project(URIRef):
+class Project:
 
     def __init__(self, uri, storePath):
         if (uri[-1] != "/"):
             raise SemPipeException("A Module must be a directory and its URI must end with a /")
-        super().__init__(uri)
+
+        self.n = URIRef(uri)
 
         self.g = ConjunctiveGraph('IOMemory')
         self.g.default_context = self.g
@@ -101,9 +102,9 @@ class Project(URIRef):
             #Aggregate graphs
             self.confGraph = self.g.get_context(URIRef("sempipe:confgraph"))
             self._loadconf()
-            for graph in self.confGraph.objects(self, semp.dataGraph):
+            for graph in self.confGraph.objects(self.n, semp.dataGraph):
                 self.loadData(graph)
-        for updateList in self.confGraph.objects(self, semp.update):
+        for updateList in self.confGraph.objects(self.n, semp.update):
             for updateInstruction in Collection(self.confGraph, updateList):
                 self.updateGraph(str(updateInstruction))
         self.commit()
@@ -119,13 +120,18 @@ class Project(URIRef):
         """, initNs={"semp": semp})
         for s in res:
             self.hostedSpaces.append(HostedSpace._make(s))
+
+    def __str__(self):
+        return str(self.n)
             
+    def __repr__(self):
+        return "{0}({1},{2})".format(self.__class__.__name__, repr(self.n), repr(self.storePath))
 
     def _loadconf(self, uri=None):
         """Loads a graph and all config-graphs it references as configuration graphs
 
-        @param uri: a URIRef, defaults to self+SempPipe.conffilename"""
-        uri = uri or URIRef(self + conffilename)
+        @param uri: a URIRef, defaults to self.n+SempPipe.conffilename"""
+        uri = uri or URIRef(self.n + conffilename)
 
         if self.g.get_context(uri):
             print("ConfGraph {} already in database".format(uri), file=sys.stderr)
@@ -136,7 +142,7 @@ class Project(URIRef):
         self.confGraph += newgraph
         self.confGraph.add((uri, rdf.type, semp.ConfGraph))
         imports = set(newgraph.objects(uri, semp.confGraph))
-        imports |= set(newgraph.objects(self, semp.confGraph))
+        imports |= set(newgraph.objects(self.n, semp.confGraph))
         imports = filter(lambda x: not self.g.get_context(x), imports)
         #Recursively load additional graphs
         for imp in imports:
@@ -177,7 +183,7 @@ class Project(URIRef):
 
     @property
     def buildDir(self):
-        return next(self.confGraph.objects(self, semp.buildDir))
+        return next(self.confGraph.objects(self.n, semp.buildDir))
 
     def buildLocation(self, resource):
         """Determines the filename in the build directory
