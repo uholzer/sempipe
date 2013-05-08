@@ -18,21 +18,9 @@ from rdflib.store import Store, NO_STORE, VALID_STORE
 from rdflib.namespace import Namespace
 from rdflib.term import Literal, URIRef, BNode, Variable
 from rdflib import RDF as rdf
-import rdflib_sparql
-import rdflib_sparql.processor
 #from tempfile import mkdtemp
 
 import RDFFresnel as Fresnel
-
-# We should not use SQLite, since
-# https://groups.google.com/forum/?fromgroups=#!topic/rdflib-dev/Cv0cekvDBnY
-
-#plugin.register(
-#    'sparql', rdflib.query.Processor,
-#    'librdf_sparql.processor', 'Processor')
-#plugin.register(
-#    'sparql', rdflib.query.Result,
-#    'librdf_sparql.results', 'SPARQLQueryResult')
 
 semp = Namespace("http://www.andonyar.com/rec/2012/sempipe/voc#")
 
@@ -154,7 +142,7 @@ class Project:
 
     def updateGraph(self, sparql):
         try:
-            rdflib_sparql.processor.processUpdate(self.g, sparql)
+            self.g.update(sparql)
         except:
             raise SemPipeException("Update instruction failed:\n{}".format(str(sparql)))
 
