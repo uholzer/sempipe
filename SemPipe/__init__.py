@@ -304,7 +304,7 @@ class Project:
         representations of the given resource. Returns None if no
         typemap is necessary.
         """
-        representations = self.confGraph.objects(resource, semp.representation)
+        representations = sorted(self.confGraph.objects(resource, semp.representation))
         typemap_url = lambda url: str(url).rsplit("/", 1)[-1]
         typemap = ["URI: {}\n\n".format(typemap_url(resource))]
         typemap_needed = False
