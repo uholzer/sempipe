@@ -67,7 +67,6 @@ class Project:
         self.n = URIRef(uri)
 
         self.g = ConjunctiveGraph('IOMemory')
-        self.g.default_context = self.g
         self.storePath = storePath
         if storePath and os.path.exists(storePath+"/store.trix"):
             self.g.parse(storePath + "/store.trix", format='trix')
