@@ -12,6 +12,8 @@ I add, change or remove features whenever I feel like it. Therefore,
 it is at the moment not possible to give a clear description of what
 SemPipe does.
 
+The file architecture.svg roughly describes the goal of the project.
+
 SemPipe contains:
 - A Python programme that builds files for a webserver based on a
   description in RDF (Can render RDF resourcecs with Fresnel, performs
