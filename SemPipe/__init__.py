@@ -68,8 +68,8 @@ class Project:
 
         self.g = ConjunctiveGraph('IOMemory')
         self.storePath = storePath
-        if storePath and os.path.exists(storePath+"/store.trix"):
-            self.g.parse(storePath + "/store.trix", format='trix')
+        if storePath and os.path.exists(storePath+"/store.nquads"):
+            self.g.parse(storePath + "/store.nq", format='nquads')
             self.confGraph = self.g.get_context(URIRef("sempipe:confgraph"))
             #self.storePath = storePath
             ## Get the Sleepycat plugin.
@@ -431,7 +431,7 @@ class Project:
     def commit(self):
         self.g.commit()
         if self.storePath:
-            self.g.serialize(destination=self.storePath+"/store.trix", format='trix', encoding='UTF-8')
+            self.g.serialize(destination=self.storePath+"/store.nq", format='nquads', encoding='UTF-8')
 
     def serialize(self):
         return self.g.serialize()
