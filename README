@@ -7,30 +7,38 @@ changes to configuration files, output formats and XSL transformations
 will be made!
 
 SemPipe is a collection of tools to create files ready for upload to a
-webserver generated from RDF data. I use it to build my website and
-I add, change or remove features whenever I feel like it. Therefore,
-it is at the moment not possible to give a clear description of what
-SemPipe does.
+webserver generated from RDF data. architecture.svg roughly describes
+how SemPipe works.
 
-The file architecture.svg roughly describes the goal of the project.
+Steps to create a Website with SemPipe:
+1. Describe stuff using RDF
+2. Write rules in N3 that derive descriptions of the Webresources you
+   want to gnerate
+4. Run the SemPipe reasoner
+5. Run the SemPipe planner
+6. Execute the plan
+7. Load generated files up to an FTP server
 
-SemPipe contains:
-- A Python programme that builds files for a webserver based on a
-  description in RDF (Can render RDF resourcecs with Fresnel, performs
-  transformations using external applications, and writes typemaps and
-  .htaccess files)
-- Perl scripts to update an FTP server according to changes made in a GIT
-  repository
 
-There is no documentation available yet, but you are free to play with
-this stuff.
+SemPipe consists of the following components:
+- CWM[1] from the W3C is used as reasoner. Any other N3 reasoner
+  should work too.
+- The planner is a Python script that reads web resource descriptions
+  from an N3 file and outputs a shell script wich generates all
+  necessairy files.
+- Some Perl scripts facilitate uploads from a Git repostiroy to an FTP
+  server.
 
 Requirements:
-- Python 3
-- Perl
+- A N3 reasoner, e.g. Cwm[1]
+- Python 2
 - rdflib <https://github.com/RDFLib/rdflib>
-- rdflib-sparql <https://github.com/RDFLib/rdflib-sparql>
+optional:
+- Perl if you want to use the upload scripts
 - RDFFresnel <https://github.com/uholzer/RDFFresnel>
+  in order to render RDF with Fresnel
 
 -- Urs Holzer <urs@andonyar.com>
+
+[1] http://www.w3.org/2000/10/swap/doc/cwm.html
 
