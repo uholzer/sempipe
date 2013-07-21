@@ -19,7 +19,6 @@ Steps to create a Website with SemPipe:
 6. Execute the plan
 7. Load generated files up to an FTP server
 
-
 SemPipe consists of the following components:
 - CWM[1] from the W3C is used as reasoner. Any other N3 reasoner
   should work too.
@@ -28,6 +27,11 @@ SemPipe consists of the following components:
   necessairy files.
 - Some Perl scripts facilitate uploads from a Git repostiroy to an FTP
   server.
+
+Documentation:
+- "Generating Websites with a Reasoner"[2] is a rough description of
+  the idea behind SemPipe.
+- More documentation will become avilable later on.
 
 Requirements:
 - A N3 reasoner, e.g. Cwm[1]
@@ -41,4 +45,5 @@ optional:
 -- Urs Holzer <urs@andonyar.com>
 
 [1] http://www.w3.org/2000/10/swap/doc/cwm.html
+[2] http://www.andonyar.com/articles/2013/websites-by-reasoning/
 
